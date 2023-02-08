@@ -1,0 +1,39 @@
+name: Terratest
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, edited, ready_for_review]
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: test
+
+jobs:
+  terratest:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: "google-github-actions/auth@v0"
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Test
+        run: go test -v ./...
